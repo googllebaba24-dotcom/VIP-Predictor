@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { 
+            background: rgba(10, 10, 10, 0.95); 
+            color: #00ff00; 
+            font-family: monospace; 
+            padding: 12px; 
+            margin: 0; 
+            border: 2px solid #00ff00;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+        }
+        .title { text-align: center; font-size: 16px; font-weight: bold; margin-bottom: 8px; color: #fff; text-shadow: 0 0 5px #00ff00; }
+        .info-box { background: #1a1a1a; border: 1px solid #333; padding: 6px 10px; font-size: 12px; margin-bottom: 8px; border-radius: 4px; display: flex; justify-content: space-between; }
+        .box { border: 1px dashed #00ff00; padding: 10px; text-align: center; margin-bottom: 8px; background: rgba(0,255,0,0.03); }
+        .result { font-size: 24px; font-weight: bold; color: yellow; margin-top: 5px; text-shadow: 0 0 8px yellow; }
+        .number-result { font-size: 28px; font-weight: bold; color: cyan; margin-top: 4px; text-shadow: 0 0 8px cyan; }
+        .timer { font-size: 14px; color: #ff5555; font-weight: bold; }
+        input { 
+            width: 100%; padding: 8px; background: #000; border: 1px solid #00ff00; 
+            color: #00ff00; font-family: monospace; margin-bottom: 8px; box-sizing: border-box; text-align: center; font-size: 14px;
+        }
+        button { 
+            background: #00ff00; color: #000; border: none; padding: 10px; 
+            width: 100%; font-weight: bold; font-size: 14px; 
+            border-radius: 4px; margin-bottom: 6px; cursor: pointer;
+            box-shadow: 0 0 5px #00ff00;
+        }
+        button:active { background: #00cc00; }
+        .close-btn { background: #cc0000; color: white; box-shadow: 0 0 5px red; }
+        #panel-content { display: none; }
+    </style>
+</head>
+<body>
+    <div class="title">🔥 SGOD VIP PRO 🔥</div>
+
+    <!-- LOGIN SCREEN -->
+    <div id="auth-screen" class="box">
+        <div style="margin-bottom: 8px; font-size: 12px; color: #fff;">ENTER ACTIVATION KEY</div>
+        <input type="text" id="key-input" placeholder="SGOD2026" onfocus="Android.enableFocus()">
+        <button onclick="verifyKey()">LOGIN</button>
+        <div id="error-msg" style="color: red; font-size: 11px; margin-top: 5px;"></div>
+    </div>
+
+    <!-- MAIN PANEL -->
+    <div id="panel-content">
+        <div class="info-box">
+            <span>Period: <b id="period-num" style="color: cyan;">0000</b></span>
+            <span>Timer: <b class="timer" id="timer">00:00</b></span>
+        </div>
+
+        <div class="box">
+            <div style="font-size: 10px; color: #aaa;">PREDICTION</div>
+            <div class="result" id="prediction">WAITING...</div>
+            <div style="font-size: 10px; color: #aaa; margin-top: 6px;">LUCKY NUMBER</div>
+            <div class="number-result" id="lucky-number">-</div>
+        </div>
+        
+        <button onclick="refreshPrediction()">REFRESH</button>
+    </div>
+    
+    <button class="close-btn" onclick="Android.closePanel()">CLOSE</button>
+
+    <script>
+        const VALID_KEY = "SGOD2026";
+
+        function verifyKey() {
+            const userKey = document.getElementById('key-input').value.trim();
+            const errorMsg = document.getElementById('error-msg');
+
+            if (userKey === VALID_KEY) {
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('panel-content').style.display = 'block';
+                initEngine();
+            } else {
+                errorMsg.innerText = "❌ Invalid Key! Use SGOD2026";
+            }
+        }
+
+        let currentPeriodStr = "";
+
+        function initEngine() {
+            function updateTimer() {
+                const now = new Date();
+                const totalSecs = now.getUTCSeconds();
+                const secLeft = 59 - (totalSecs % 60);
+                document.getElementById("timer").innerText = "00:" + (secLeft < 10 ? "0" + secLeft : secLeft);
+
+                // Generate period based on minutes
+                const totalMins = now.getUTCHours() * 60 + now.getUTCMinutes();
+                const pId = "99" + totalMins;
+                
+                if (pId !== currentPeriodStr) {
+                    currentPeriodStr = pId;
+                    document.getElementById("period-num").innerText = pId;
+                    calculateNewPrediction(pId);
+                }
+            }
+            setInterval(updateTimer, 1000);
+            updateTimer();
+        }
+
+        function calculateNewPrediction(period) {
+            // Clean deterministic logic
+            let seed = parseInt(period) * 31;
+            let isBig = seed % 2 === 0;
+            let luckyNum = isBig ? (5 + (seed % 5)) : (seed % 5);
+
+            document.getElementById('prediction').innerText = isBig ? "BIG 🟢" : "SMALL 🔴";
+            document.getElementById('prediction').style.color = isBig ? "#00ff00" : "#ff3333";
+            document.getElementById('lucky-number').innerText = luckyNum;
+        }
+
+        function refreshPrediction() {
+            if(currentPeriodStr) {
+                calculateNewPrediction(currentPeriodStr + Math.floor(Math.random()*10)); // Force minor refresh if needed
+            }
+        }
+    </script>
+</body>
+</html>
