@@ -1,4 +1,4 @@
-package org.sgod.overlay
+package org.sgod.jiolottery
 
 import android.content.Intent
 import android.net.Uri
@@ -22,7 +22,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         val title = TextView(this).apply {
-            text = "🔥 SGOD VIP PANEL 🔥"
+            text = "🟢 JIO LOTTERY VIP 🟢"
             setTextColor(android.graphics.Color.parseColor("#00ff00"))
             textSize = 20f
             setTypeface(null, android.graphics.Typeface.BOLD)
@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
         layout.addView(title)
 
         val desc = TextView(this).apply {
-            text = "\nOverlay permission is required to run the floating prediction panel over other apps.\n"
+            text = "\nGrant overlay permission to start the Jio Lottery live predictor panel.\n"
             setTextColor(android.graphics.Color.WHITE)
             textSize = 14f
             gravity = android.view.Gravity.CENTER
