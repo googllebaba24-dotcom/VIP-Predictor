@@ -20,8 +20,10 @@ class FloatingService : Service() {
 
     private lateinit var windowManager: WindowManager
     private lateinit var container: LinearLayout
+    private lateinit var bubbleView: TextView
     private lateinit var params: WindowManager.LayoutParams
     private lateinit var webView: WebView
+    private var isMinimized = false
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -30,6 +32,7 @@ class FloatingService : Service() {
         super.onCreate()
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
 
+        // 1. Main Prediction Panel Container
         container = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(Color.TRANSPARENT)
@@ -55,6 +58,17 @@ class FloatingService : Service() {
         }
         container.addView(webView)
 
+        // 2. Small Floating Bubble (Minimized Icon)
+        bubbleView = TextView(this).apply {
+            text = "🔥"
+            setTextColor(Color.WHITE)
+            textSize = 22f
+            gravity = Gravity.CENTER
+            setBackgroundColor(Color.parseColor("#cc000000"))
+            setPadding(20, 20, 20, 20)
+            visibility = View.GONE
+        }
+
         val layoutFlag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         } else {
@@ -73,6 +87,7 @@ class FloatingService : Service() {
             y = 200
         }
 
+        // Drag functionality for Panel
         dragBar.setOnTouchListener(object : View.OnTouchListener {
             private var initialX = 0
             private var initialY = 0
@@ -99,12 +114,64 @@ class FloatingService : Service() {
             }
         })
 
+        // Drag & Click functionality for Bubble
+        bubbleView.setOnTouchListener(object : View.OnTouchListener {
+            private var initialX = 0
+            private var initialY = 0
+            private var initialTouchX = 0f
+            private var initialTouchY = 0f
+            private var isMoved = false
+
+            override fun onTouch(v: View, event: MotionEvent): Boolean {
+                when (event.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        initialX = params.x
+                        initialY = params.y
+                        initialTouchX = event.rawX
+                        initialTouchY = event.rawY
+                        isMoved = false
+                        return true
+                    }
+                    MotionEvent.ACTION_MOVE -> {
+                        val dx = (event.rawX - initialTouchX).toInt()
+                        val dy = (event.rawY - initialTouchY).toInt()
+                        if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+                            isMoved = true
+                            params.x = initialX + dx
+                            params.y = initialY + dy
+                            windowManager.updateViewLayout(bubbleView, params)
+                        }
+                        return true
+                    }
+                    MotionEvent.ACTION_UP -> {
+                        if (!isMoved) {
+                            // Bubble par tap karne par wapas panel khul jayega
+                            expandPanel()
+                        }
+                        return true
+                    }
+                }
+                return false
+            }
+        })
+
         windowManager.addView(container, params)
+        windowManager.addView(bubbleView, params)
     }
 
     inner class WebAppInterface {
         @JavascriptInterface
-        fun closePanel() {
+        fun minimizePanel() {
+            // App band nahi hoga, bubble ban jayega
+            android.os.Handler(mainLooper).post {
+                container.visibility = View.GONE
+                bubbleView.visibility = View.VISIBLE
+                isMinimized = true
+            }
+        }
+
+        @JavascriptInterface
+        fun closeApp() {
             stopSelf()
         }
 
@@ -112,17 +179,26 @@ class FloatingService : Service() {
         fun enableFocus() {
             try {
                 params.flags = WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
-                windowManager.updateViewLayout(container, params)
+                windowManager.updateViewLayout(if (isMinimized) bubbleView else container, params)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
     }
 
+    private fun expandPanel() {
+        bubbleView.visibility = View.GONE
+        container.visibility = View.VISIBLE
+        isMinimized = false
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         if (::container.isInitialized) {
-            windowManager.removeView(container)
+            try { windowManager.removeView(container) } catch (e: Exception) {}
+        }
+        if (::bubbleView.isInitialized) {
+            try { windowManager.removeView(bubbleView) } catch (e: Exception) {}
         }
     }
 }
