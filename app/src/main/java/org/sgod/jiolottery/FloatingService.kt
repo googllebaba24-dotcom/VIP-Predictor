@@ -1,4 +1,4 @@
-package org.sgod.overlay
+package org.sgod.jiolottery
 
 import android.annotation.SuppressLint
 import android.app.Service
@@ -32,14 +32,13 @@ class FloatingService : Service() {
         super.onCreate()
         windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
 
-        // 1. Main Prediction Panel Container
         container = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(Color.TRANSPARENT)
         }
 
         val dragBar = TextView(this).apply {
-            text = "✥ DRAG TO MOVE ✥"
+            text = "✥ JIO LOTTERY PANEL ✥"
             setTextColor(Color.WHITE)
             setBackgroundColor(Color.parseColor("#1f1f1f"))
             gravity = Gravity.CENTER
@@ -58,9 +57,8 @@ class FloatingService : Service() {
         }
         container.addView(webView)
 
-        // 2. Small Floating Bubble (Minimized Icon)
         bubbleView = TextView(this).apply {
-            text = "🔥"
+            text = "🟢"
             setTextColor(Color.WHITE)
             textSize = 22f
             gravity = Gravity.CENTER
@@ -87,7 +85,6 @@ class FloatingService : Service() {
             y = 200
         }
 
-        // Drag functionality for Panel
         dragBar.setOnTouchListener(object : View.OnTouchListener {
             private var initialX = 0
             private var initialY = 0
@@ -114,7 +111,6 @@ class FloatingService : Service() {
             }
         })
 
-        // Drag & Click functionality for Bubble
         bubbleView.setOnTouchListener(object : View.OnTouchListener {
             private var initialX = 0
             private var initialY = 0
@@ -145,7 +141,6 @@ class FloatingService : Service() {
                     }
                     MotionEvent.ACTION_UP -> {
                         if (!isMoved) {
-                            // Bubble par tap karne par wapas panel khul jayega
                             expandPanel()
                         }
                         return true
@@ -162,7 +157,6 @@ class FloatingService : Service() {
     inner class WebAppInterface {
         @JavascriptInterface
         fun minimizePanel() {
-            // App band nahi hoga, bubble ban jayega
             android.os.Handler(mainLooper).post {
                 container.visibility = View.GONE
                 bubbleView.visibility = View.VISIBLE
