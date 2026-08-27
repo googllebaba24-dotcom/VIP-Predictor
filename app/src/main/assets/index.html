@@ -30,7 +30,8 @@
             box-shadow: 0 0 5px #00ff00;
         }
         button:active { background: #00cc00; }
-        .close-btn { background: #cc0000; color: white; box-shadow: 0 0 5px red; }
+        .min-btn { background: #ffaa00; color: black; box-shadow: 0 0 5px orange; }
+        .close-btn { background: #cc0000; color: white; box-shadow: 0 0 5px red; font-size: 11px; padding: 6px; }
         #panel-content { display: none; }
     </style>
 </head>
@@ -53,19 +54,22 @@
         </div>
 
         <div class="box">
-            <div style="font-size: 10px; color: #aaa;">PREDICTION</div>
+            <div style="font-size: 10px; color: #aaa;">STATUS: <span style="color: #00ff00;">LOCKED (STABLE)</span></div>
             <div class="result" id="prediction">WAITING...</div>
-            <div style="font-size: 10px; color: #aaa; margin-top: 6px;">LUCKY NUMBER</div>
+            <div style="font-size: 10px; color: #aaa; margin-top: 6px;">LUCKY NUMBER (0-9)</div>
             <div class="number-result" id="lucky-number">-</div>
         </div>
         
-        <button onclick="refreshPrediction()">REFRESH</button>
+        <button class="min-btn" onclick="Android.minimizePanel()">MINIMIZE TO BUBBLE 🔴</button>
     </div>
     
-    <button class="close-btn" onclick="Android.closePanel()">CLOSE</button>
+    <button class="close-btn" onclick="Android.closeApp()">EXIT APP COMPLETELY</button>
 
     <script>
         const VALID_KEY = "SGOD2026";
+        let activePeriod = "";
+        let lockedResultText = "";
+        let lockedLuckyNum = "";
 
         function verifyKey() {
             const userKey = document.getElementById('key-input').value.trim();
@@ -74,50 +78,51 @@
             if (userKey === VALID_KEY) {
                 document.getElementById('auth-screen').style.display = 'none';
                 document.getElementById('panel-content').style.display = 'block';
-                initEngine();
+                startEngine();
             } else {
                 errorMsg.innerText = "❌ Invalid Key! Use SGOD2026";
             }
         }
 
-        let currentPeriodStr = "";
-
-        function initEngine() {
+        function startEngine() {
             function updateTimer() {
                 const now = new Date();
                 const totalSecs = now.getUTCSeconds();
                 const secLeft = 59 - (totalSecs % 60);
                 document.getElementById("timer").innerText = "00:" + (secLeft < 10 ? "0" + secLeft : secLeft);
 
-                // Generate period based on minutes
                 const totalMins = now.getUTCHours() * 60 + now.getUTCMinutes();
-                const pId = "99" + totalMins;
+                const pId = "10" + totalMins;
                 
-                if (pId !== currentPeriodStr) {
-                    currentPeriodStr = pId;
-                    document.getElementById("period-num").innerText = pId;
-                    calculateNewPrediction(pId);
+                document.getElementById("period-num").innerText = pId.slice(-4);
+
+                if (pId !== activePeriod) {
+                    activePeriod = pId;
+                    generateLockedPrediction(pId);
                 }
             }
             setInterval(updateTimer, 1000);
             updateTimer();
         }
 
-        function calculateNewPrediction(period) {
-            // Clean deterministic logic
-            let seed = parseInt(period) * 31;
-            let isBig = seed % 2 === 0;
-            let luckyNum = isBig ? (5 + (seed % 5)) : (seed % 5);
+        function generateLockedPrediction(period) {
+            let hash = 0;
+            for (let i = 0; i < period.length; i++) {
+                hash = period.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            let absHash = Math.abs(hash);
+            let isBig = absHash % 2 === 0;
 
-            document.getElementById('prediction').innerText = isBig ? "BIG 🟢" : "SMALL 🔴";
-            document.getElementById('prediction').style.color = isBig ? "#00ff00" : "#ff3333";
-            document.getElementById('lucky-number').innerText = luckyNum;
+            lockedResultText = isBig ? "BIG 🟢" : "SMALL 🔴";
+            lockedLuckyNum = isBig ? (5 + (absHash % 5)) : (absHash % 5);
+
+            displayResult();
         }
 
-        function refreshPrediction() {
-            if(currentPeriodStr) {
-                calculateNewPrediction(currentPeriodStr + Math.floor(Math.random()*10)); // Force minor refresh if needed
-            }
+        function displayResult() {
+            document.getElementById('prediction').innerText = lockedResultText;
+            document.getElementById('prediction').style.color = lockedResultText.includes("BIG") ? "#00ff00" : "#ff3333";
+            document.getElementById('lucky-number').innerText = lockedLuckyNum;
         }
     </script>
 </body>
