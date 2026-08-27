@@ -6,7 +6,7 @@
 
     <application
         android:allowBackup="true"
-        android:label="SGOD VIP"
+        android:label="Jio Lottery VIP"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
         
