@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace 'org.sgod.overlay'
+    namespace 'org.sgod.jiolottery'
     compileSdk 34
 
     defaultConfig {
-        applicationId "org.sgod.overlay"
+        applicationId "org.sgod.jiolottery"
         minSdk 24
         targetSdk 34
         versionCode 1
